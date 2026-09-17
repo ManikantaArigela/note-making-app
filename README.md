@@ -1,95 +1,124 @@
-# LuminalNotes
+# ApexPulse - Professional Personal Productivity SaaS
 
-A beginner-friendly MERN notes application. Create, edit, pin, search, tag, color-code, and delete notes through a React interface backed by an Express and MongoDB API.
+ApexPulse is a minimalist, modern, personal productivity SaaS application built with the **MERN** stack (**M**ongoDB, **E**xpress, **R**eact, **N**ode.js).
 
-## Features
+Designed to help users plan their day, execute work, complete tasks, track consistency, and visualize progress.
 
-- Full note CRUD (create, read, update, and delete)
-- Pin important notes; pinned notes are listed first
-- Search by title, content, or tags
-- Comma-separated tags and selectable note colors
-- Responsive React/Vite frontend with an Express REST API
-- Zero-setup in-memory MongoDB fallback for local development
+---
 
-## Tech stack
+## 🚀 Features
 
-- Frontend: React 18, Vite, Lucide React
-- Backend: Node.js, Express, Mongoose
-- Database: MongoDB or `mongodb-memory-server`
+- **Dashboard**: Complete productivity status, Today's completion rate %, Focus hours, Current streak counter, Weekly productivity bar chart (Recharts), Task category breakdown, Goal progress summary, and Motivational productivity insights.
+- **GitHub-Style Activity Heatmap**: Signature 365-day contribution heatmap powered by real MongoDB `ActivityEvent` data, with interactive day inspection modals.
+- **Today & Tomorrow Views**: Dedicated day execution and planning screens with instant checkbox completion, automatic activity recording, and task shifting between Today / Tomorrow / Inbox.
+- **Inbox**: Unscheduled task capture with search, category/priority filters, and quick scheduling.
+- **Universal Add Task Modal**: Access anywhere to specify title, description, due date, time, priority, category, project, goal, estimated duration, recurrence (daily, weekday, weekly, monthly, yearly), and subtasks.
+- **Goals & Projects**: Outcome-focused goals and multi-task project workspaces with progress tracking.
+- **Focus Zone**: Interactive Pomodoro (25m/50m) and custom timer connected to tasks and projects with audio chime completion synthesis.
+- **Multi-User Social Friends**: Search users, send/accept friend requests, and view friend productivity streak leaderboards (private tasks strictly protected).
+- **Smart Notifications**: Motivational web push alerts, in-app notifications, quiet hours customization, and optional email alerts.
+- **Gamification**: XP points, Leveling system, Badges, and Milestones.
+- **Mobile & PWA**: Fully responsive layout with mobile bottom navigation bar and service worker support.
 
-## Getting started
+---
 
-### Prerequisites
+## 🛠️ Technology Stack
 
-- Node.js 18 or later
-- npm
+- **Frontend**: React 18, Vite, Tailwind CSS, Lucide React Icons, Recharts, Axios.
+- **Backend**: Node.js, Express.js.
+- **Database**: MongoDB & Mongoose.
+- **Authentication**: JWT (JSON Web Tokens) & bcryptjs password hashing.
+- **Notifications**: Web Push (`web-push`), Nodemailer.
 
-### Install dependencies
+---
 
-From the project root:
+## ⚙️ Environment Variables
 
-```bash
-npm run install-all
+### Backend (`backend/.env`)
+
+```env
+PORT=5000
+MONGODB_URI=mongodb://127.0.0.1:27017/productivity_app
+JWT_SECRET=super_secret_productivity_jwt_key_2026
+VAPID_PUBLIC_KEY=BEl62iUYgUivxIkv69yViEuiBIa-m9GYv54L356v5Yk
+VAPID_PRIVATE_KEY=your_vapid_private_key
+VAPID_EMAIL=admin@productivityapp.local
 ```
 
-### Start development servers
+---
+
+## 🏃 Quick Start (Local Development)
+
+### 1. Install Dependencies
 
 ```bash
+# Backend
+cd backend
+npm install
+
+# Frontend
+cd ../frontend
+npm install
+```
+
+### 2. Seed Initial Test Data (Optional)
+
+```bash
+cd backend
+npm run seed
+```
+
+This creates a demo account:
+- **Email**: `demo@example.com`
+- **Password**: `password123`
+
+### 3. Run Backend Server
+
+```bash
+cd backend
 npm run dev
 ```
 
-Then open [http://localhost:5173](http://localhost:5173). The frontend proxies `/api` requests to the Express server at `http://localhost:5000`.
+*Backend runs at http://localhost:5000*
 
-## Database configuration
+### 4. Run Frontend Development Server
 
-By default, the backend starts a temporary in-memory MongoDB instance, so no database setup is required. Its data is cleared whenever the server stops.
-
-To use a persistent MongoDB database, create `backend/.env`:
-
-```env
-MONGODB_URI=mongodb://127.0.0.1:27017/luminalnotes
-PORT=5000
+```bash
+cd frontend
+npm run dev
 ```
 
-You can also supply a MongoDB Atlas connection string as `MONGODB_URI`.
+*Frontend runs at http://localhost:5173*
 
-## Available scripts
+---
 
-| Command | Description |
-| --- | --- |
-| `npm run install-all` | Install root, frontend, and backend dependencies |
-| `npm run dev` | Start frontend and backend concurrently |
-| `npm run dev:frontend` | Start Vite on port 5173 |
-| `npm run dev:backend` | Start Express with Nodemon on port 5000 |
-| `npm run build --prefix frontend` | Create a production frontend build |
+## 🚢 Deployment Guide
 
-## API
+### Frontend → Vercel
 
-Base URL: `/api/notes`
+1. Push your repository to GitHub.
+2. Import project into Vercel dashboard.
+3. Set **Root Directory** to `frontend`.
+4. Build Command: `npm run build`
+5. Output Directory: `dist`
+6. Add Environment Variable:
+   - `VITE_API_BASE_URL`: `https://your-render-backend-url.onrender.com/api`
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/api/notes` | List notes, with pinned and recently updated notes first |
-| `POST` | `/api/notes` | Create a note |
-| `PUT` | `/api/notes/:id` | Update a note |
-| `DELETE` | `/api/notes/:id` | Delete a note |
+### Backend → Render
 
-Example request body for creating or updating a note:
+1. Create a Web Service on Render pointing to your GitHub repository.
+2. Set **Root Directory** to `backend`.
+3. Build Command: `npm install`
+4. Start Command: `node server.js`
+5. Environment Variables:
+   - `MONGODB_URI`: *Your MongoDB Atlas connection string*
+   - `JWT_SECRET`: *Your JWT Secret*
+   - `VAPID_PUBLIC_KEY` & `VAPID_PRIVATE_KEY`
 
-```json
-{
-  "title": "Project ideas",
-  "content": "Draft the feature list.",
-  "pinned": true,
-  "color": "#2d264d",
-  "tags": ["work", "ideas"]
-}
-```
+---
 
-## Project structure
+## 🌐 Database Setup (MongoDB Atlas)
 
-```text
-backend/           Express API and Mongoose model
-frontend/          React and Vite client
-package.json       Root development scripts
-```
+1. Create a cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+2. Create a Database User and whitelist `0.0.0.0/0` in Network Access.
+3. Copy connection string into `MONGODB_URI` environment variable.

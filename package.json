@@ -1,15 +1,12 @@
 {
-  "name": "luminalnotes-mern",
+  "name": "productivity-app-root",
   "version": "1.0.0",
-  "description": "A very basic and beginner friendly MERN note making application",
   "private": true,
   "scripts": {
-    "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",
-    "dev:backend": "npm run dev --prefix backend",
-    "dev:frontend": "npm run dev --prefix frontend",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
-  },
-  "dependencies": {
-    "concurrently": "^8.2.2"
+    "start": "node backend/server.js",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "seed": "cd backend && npm run seed",
+    "build": "cd frontend && npm run build"
   }
 }

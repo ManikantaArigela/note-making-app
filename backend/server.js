@@ -1,64 +1,53 @@
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { connectDB } from './config/db.js';
+import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
-// Load environment variables from backend/.env
+import authRoutes from './routes/authRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';
+import habitRoutes from './routes/habitRoutes.js';
+import focusRoutes from './routes/focusRoutes.js';
+import goalRoutes from './routes/goalRoutes.js';
+import activityRoutes from './routes/activityRoutes.js';
+import achievementRoutes from './routes/achievementRoutes.js';
+import friendRoutes from './routes/friendRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
+
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+// Connect to MongoDB
+connectDB();
 
-// MIDDLEWARE
-// Enable Cross-Origin Resource Sharing (allows frontend at port 5173 to contact backend at port 5000)
+const app = express();
+
 app.use(cors());
-// Parse incoming requests that carry JSON payloads
 app.use(express.json());
 
-// DATABASE CONNECTION
-const connectDatabase = async () => {
-  let dbUri = process.env.MONGODB_URI;
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/habits', habitRoutes);
+app.use('/api/focus', focusRoutes);
+app.use('/api/goals', goalRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/friends', friendRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
-  // Zero-setup Fallback: If no URI is configured, spin up a local in-memory MongoDB server
-  if (!dbUri) {
-    console.log('\n======================================================');
-    console.log('No MONGODB_URI found in backend/.env');
-    console.log('Launching mongodb-memory-server (Local In-Memory DB)...');
-    console.log('======================================================\n');
-    
-    try {
-      const { MongoMemoryServer } = require('mongodb-memory-server');
-      const memoryDb = await MongoMemoryServer.create();
-      dbUri = memoryDb.getUri();
-    } catch (error) {
-      console.error('Failed to launch MongoDB Memory Server:', error);
-      process.exit(1);
-    }
-  }
-
-  try {
-    await mongoose.connect(dbUri);
-    const isLocalMem = dbUri.includes('127.0.0.1') || dbUri.includes('localhost') && !process.env.MONGODB_URI;
-    console.log(`>>> Connected to MongoDB database [${isLocalMem ? 'Temporary In-Memory Server' : 'Custom Configured DB'}]`);
-  } catch (error) {
-    console.error('MongoDB database connection error:', error);
-    process.exit(1);
-  }
-};
-
-connectDatabase();
-
-// ROUTES
-const notesRouter = require('./routes/notes');
-// Mount CRUD routes to /api/notes
-app.use('/api/notes', notesRouter);
-
-// Catch-all route handler for unmatched routes
-app.use((req, res) => {
-  res.status(404).json({ error: 'API endpoint not found' });
+app.get('/', (req, res) => {
+  res.json({ message: 'Productivity Application API is running smoothly 🚀' });
 });
 
-// START EXPRESS SERVER
+app.use(notFound);
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`>>> Express server is running on http://localhost:${PORT}`);
+  console.log(`[Server Running]: http://localhost:${PORT}`);
 });
