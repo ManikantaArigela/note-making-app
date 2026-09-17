@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, CalendarCheck, CalendarDays, Inbox, Compass, FolderKanban } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, CalendarDays, Inbox, CheckCircle2, RefreshCw } from 'lucide-react';
 
 export const MobileNav = ({ activeTab, setActiveTab }) => {
   const items = [
@@ -7,8 +7,8 @@ export const MobileNav = ({ activeTab, setActiveTab }) => {
     { id: 'today', label: 'Today', icon: CalendarCheck },
     { id: 'tomorrow', label: 'Tomorrow', icon: CalendarDays },
     { id: 'inbox', label: 'Inbox', icon: Inbox },
-    { id: 'focus', label: 'Focus', icon: Compass },
-    { id: 'projects', label: 'Projects', icon: FolderKanban },
+    { id: 'completed', label: 'Done', icon: CheckCircle2 },
+    { id: 'weekly-reset', label: 'Reset', icon: RefreshCw },
   ];
 
   return (
@@ -20,7 +20,7 @@ export const MobileNav = ({ activeTab, setActiveTab }) => {
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            className={`flex flex-col items-center gap-1 px-2.5 py-1 rounded-xl transition-colors ${
+            className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors ${
               isActive ? 'bg-[#d6e2d5] text-[#1b3b2b] font-bold' : 'text-slate-500 hover:text-slate-900'
             }`}
           >

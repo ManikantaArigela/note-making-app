@@ -5,8 +5,9 @@ import {
   CalendarCheck,
   CalendarDays,
   Inbox,
+  CheckCircle2,
   Heart,
-  Timer,
+  RefreshCw,
   FolderKanban,
   Users,
   Settings,
@@ -18,11 +19,12 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'today', label: 'Today', icon: CalendarCheck },
     { id: 'tomorrow', label: 'Tomorrow', icon: CalendarDays },
     { id: 'inbox', label: 'Inbox', icon: Inbox },
+    { id: 'completed', label: 'Completed', icon: CheckCircle2 },
   ];
 
   const focusNav = [
     { id: 'goals', label: 'Goals', icon: Heart },
-    { id: 'focus', label: 'Focus', icon: Compass },
+    { id: 'weekly-reset', label: 'Weekly Reset', icon: RefreshCw },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
   ];
 

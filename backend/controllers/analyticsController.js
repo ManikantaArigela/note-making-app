@@ -2,14 +2,13 @@ import { Task } from '../models/Task.js';
 import { FocusSession } from '../models/FocusSession.js';
 import { ActivityEvent } from '../models/ActivityEvent.js';
 import { Goal } from '../models/Goal.js';
-import { HabitCompletion } from '../models/HabitCompletion.js';
+import { recordActivityEvent } from '../services/activityService.js';
 
 export const getDashboardAnalytics = async (req, res) => {
   try {
     const userId = req.user._id;
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // 1. Today's Tasks
     const todayTasks = await Task.find({
       userId,
       $or: [
@@ -23,11 +22,9 @@ export const getDashboardAnalytics = async (req, res) => {
     const completedTodayCount = todayTasks.filter((t) => t.isCompleted).length;
     const todayCompletionRate = totalTodayCount > 0 ? Math.round((completedTodayCount / totalTodayCount) * 100) : 0;
 
-    // 2. Today's Focus Mins
     const todayFocusSessions = await FocusSession.find({ userId, completedDateStr: todayStr });
     const todayFocusMinutes = todayFocusSessions.reduce((sum, s) => sum + s.durationMinutes, 0);
 
-    // 3. Weekly Productivity (Last 7 Days)
     const weeklyData = [];
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     let bestDayName = 'Thursday';
@@ -61,7 +58,6 @@ export const getDashboardAnalytics = async (req, res) => {
       }
     }
 
-    // 4. Task Category Breakdown
     const categoryAgg = await Task.aggregate([
       { $match: { userId, isCompleted: true } },
       { $group: { _id: '$category', count: { $sum: 1 } } },
@@ -72,12 +68,10 @@ export const getDashboardAnalytics = async (req, res) => {
       count: item.count,
     }));
 
-    // 5. Goal Progress Overview
     const goals = await Goal.find({ userId, status: 'in_progress' });
     const totalGoals = goals.length;
     const achievedGoals = await Goal.countDocuments({ userId, status: 'achieved' });
 
-    // 6. Productivity Insight Generator
     let insightText = '';
     if (completedTodayCount === totalTodayCount && totalTodayCount > 0) {
       insightText = '🔥 Perfect day! You completed 100% of your scheduled tasks today.';
@@ -116,7 +110,6 @@ export const getWeeklyReview = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Start of week (7 days ago)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const startDateStr = sevenDaysAgo.toISOString().split('T')[0];
@@ -127,11 +120,14 @@ export const getWeeklyReview = async (req, res) => {
       isCompleted: true,
     });
 
-    const missedTasks = await Task.find({
+    const unfinishedTasks = await Task.find({
       userId,
-      scheduledDate: { $gte: startDateStr },
       isCompleted: false,
-    });
+      $or: [
+        { scheduledDate: { $lte: new Date().toISOString().split('T')[0] } },
+        { scheduledDate: null },
+      ],
+    }).sort({ priority: -1, createdAt: -1 });
 
     const focusSessions = await FocusSession.find({
       userId,
@@ -139,20 +135,62 @@ export const getWeeklyReview = async (req, res) => {
     });
 
     const totalFocusMinutes = focusSessions.reduce((sum, s) => sum + s.durationMinutes, 0);
-
-    const totalScheduled = completedTasks.length + missedTasks.length;
+    const totalScheduled = completedTasks.length + unfinishedTasks.length;
     const completionRate = totalScheduled > 0 ? Math.round((completedTasks.length / totalScheduled) * 100) : 0;
 
     res.json({
       period: 'Last 7 Days',
-      tasksCompleted: completedTasks.length,
-      missedTasks: missedTasks.length,
+      completedTasksCount: completedTasks.length,
+      unfinishedTasks,
       completionRate,
       focusHours: (totalFocusMinutes / 60).toFixed(1),
       currentStreak: req.user.currentStreak,
-      insight: `You completed ${completedTasks.length} tasks and logged ${(totalFocusMinutes / 60).toFixed(
-        1
-      )} focus hours over the last 7 days.`,
+      insight: `You completed ${completedTasks.length} tasks over the last 7 days.`,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const completeWeeklyReset = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { priorities } = req.body; // Array of priority string titles
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Create high-priority tasks for next week if priorities provided
+    if (priorities && Array.isArray(priorities)) {
+      const nextMon = new Date();
+      nextMon.setDate(nextMon.getDate() + ((7 - nextMon.getDay() + 1) % 7 || 7));
+      const nextMonStr = nextMon.toISOString().split('T')[0];
+
+      for (const title of priorities) {
+        if (title && title.trim()) {
+          await Task.create({
+            userId,
+            title: title.trim(),
+            category: 'Learning',
+            priority: 'high',
+            state: 'scheduled',
+            scheduledDate: nextMonStr,
+          });
+        }
+      }
+    }
+
+    // Record Activity Event for Weekly Reset Completion
+    const activityData = await recordActivityEvent({
+      userId,
+      eventType: 'GOAL_COMPLETED',
+      title: '🔄 Completed Weekly Reset & Planning',
+      impactScore: 4,
+      dateStr: todayStr,
+    });
+
+    res.json({
+      message: 'Weekly Reset completed! Priorities set for next week 🚀',
+      activityData,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

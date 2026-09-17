@@ -43,7 +43,6 @@ export const ActivityHeatmap = () => {
   };
 
   const gridDays = generateGrid();
-
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   const handleCellClick = async (dateStr) => {
@@ -62,15 +61,15 @@ export const ActivityHeatmap = () => {
   const getIntensityClass = (intensity) => {
     switch (intensity) {
       case 1:
-        return 'bg-[#c8e6c9] border-[#b9dbba]';
+        return 'bg-[#c5e1a5] border-[#b2d88f]';
       case 2:
-        return 'bg-[#81c784] border-[#72b875]';
+        return 'bg-[#7cb342] border-[#689f38]';
       case 3:
-        return 'bg-[#388e3c] border-[#2e7d32]';
+        return 'bg-[#33691e] border-[#255115]';
       case 4:
-        return 'bg-[#1b3b2b] border-[#132c1f]';
+        return 'bg-[#1b3b2b] border-[#122a1e]';
       default:
-        return 'bg-[#eef1eb] border-[#e2e5dc] hover:border-slate-400';
+        return 'bg-[#ebede6] border-[#dcdfd6] hover:border-slate-400';
     }
   };
 
@@ -86,13 +85,13 @@ export const ActivityHeatmap = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+        <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium">
           <span>Less</span>
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#eef1eb] border border-[#e2e5dc]" />
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#c8e6c9] border border-[#b9dbba]" />
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#81c784] border border-[#72b875]" />
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#388e3c] border border-[#2e7d32]" />
-          <span className="w-2.5 h-2.5 rounded-sm bg-[#1b3b2b] border border-[#132c1f]" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#ebede6] border border-[#dcdfd6]" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#c5e1a5] border border-[#b2d88f]" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#7cb342] border border-[#689f38]" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#33691e] border border-[#255115]" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-[#1b3b2b] border border-[#122a1e]" />
           <span>More</span>
         </div>
       </div>
@@ -100,7 +99,7 @@ export const ActivityHeatmap = () => {
       {/* Grid Container */}
       <div className="overflow-x-auto pb-1">
         {/* Months Label Row */}
-        <div className="flex justify-between min-w-[700px] pl-6 pr-2 mb-1 text-[10px] font-semibold text-slate-400">
+        <div className="flex justify-between min-w-[700px] pl-6 pr-2 mb-1 text-[10px] font-semibold text-slate-500">
           {months.map((m, i) => (
             <span key={i}>{m}</span>
           ))}
@@ -108,7 +107,7 @@ export const ActivityHeatmap = () => {
 
         <div className="flex items-start gap-2 min-w-[700px]">
           {/* Day of week labels */}
-          <div className="flex flex-col justify-between h-[84px] text-[9px] font-semibold text-slate-400 select-none pr-1">
+          <div className="flex flex-col justify-between h-[84px] text-[9px] font-semibold text-slate-500 select-none pr-1">
             <span>Mon</span>
             <span>Wed</span>
             <span>Fri</span>
@@ -133,7 +132,7 @@ export const ActivityHeatmap = () => {
       {/* Day Details Modal */}
       {selectedDay && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#e2e5dc] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+          <div className="bg-white border border-[#e2e5dc] rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 text-slate-800">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[#1b3b2b]" />

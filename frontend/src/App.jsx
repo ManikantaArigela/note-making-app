@@ -6,8 +6,9 @@ import { DashboardPage } from './pages/DashboardPage';
 import { TodayPage } from './pages/TodayPage';
 import { TomorrowPage } from './pages/TomorrowPage';
 import { InboxPage } from './pages/InboxPage';
+import { CompletedPage } from './pages/CompletedPage';
 import { GoalsPage } from './pages/GoalsPage';
-import { FocusPage } from './pages/FocusPage';
+import { WeeklyResetPage } from './pages/WeeklyResetPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { FriendsPage } from './pages/FriendsPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -18,8 +19,8 @@ export function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-xs animate-pulse">
-        Initializing ApexPulse...
+      <div className="min-h-screen bg-[#f4f5f0] flex items-center justify-center text-slate-500 text-xs animate-pulse">
+        Initializing FocusFlow...
       </div>
     );
   }
@@ -38,10 +39,12 @@ export function App() {
         return <TomorrowPage />;
       case 'inbox':
         return <InboxPage />;
+      case 'completed':
+        return <CompletedPage />;
       case 'goals':
         return <GoalsPage />;
-      case 'focus':
-        return <FocusPage />;
+      case 'weekly-reset':
+        return <WeeklyResetPage />;
       case 'projects':
         return <ProjectsPage />;
       case 'friends':

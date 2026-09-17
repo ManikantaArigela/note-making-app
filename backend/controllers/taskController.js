@@ -5,7 +5,7 @@ import { handleTaskRecurrence } from '../services/taskRecurrenceService.js';
 
 export const getTasks = async (req, res) => {
   try {
-    const { state, date, projectId, goalId, category, priority, search } = req.query;
+    const { state, date, projectId, goalId, category, priority, search, isCompleted } = req.query;
     const filter = { userId: req.user._id };
 
     if (state) filter.state = state;
@@ -14,6 +14,7 @@ export const getTasks = async (req, res) => {
     if (goalId) filter.goalId = goalId;
     if (category) filter.category = category;
     if (priority) filter.priority = priority;
+    if (isCompleted !== undefined) filter.isCompleted = isCompleted === 'true';
 
     if (search) {
       filter.$or = [
@@ -37,18 +38,18 @@ export const getTodayTasks = async (req, res) => {
   try {
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Today's scheduled tasks + overdue tasks that are uncompleted
+    // Only return uncompleted tasks for today/overdue
     const tasks = await Task.find({
       userId: req.user._id,
+      isCompleted: false,
       $or: [
         { scheduledDate: todayStr },
-        { completedDateStr: todayStr, isCompleted: true },
-        { scheduledDate: { $lt: todayStr }, isCompleted: false },
+        { scheduledDate: { $lt: todayStr } },
       ],
     })
       .populate('projectId', 'title color')
       .populate('goalId', 'title')
-      .sort({ isCompleted: 1, priority: -1, createdAt: -1 });
+      .sort({ priority: -1, createdAt: -1 });
 
     res.json(tasks);
   } catch (error) {
@@ -64,11 +65,12 @@ export const getTomorrowTasks = async (req, res) => {
 
     const tasks = await Task.find({
       userId: req.user._id,
+      isCompleted: false,
       scheduledDate: tomorrowStr,
     })
       .populate('projectId', 'title color')
       .populate('goalId', 'title')
-      .sort({ isCompleted: 1, priority: -1, createdAt: -1 });
+      .sort({ priority: -1, createdAt: -1 });
 
     res.json(tasks);
   } catch (error) {
@@ -80,12 +82,42 @@ export const getInboxTasks = async (req, res) => {
   try {
     const tasks = await Task.find({
       userId: req.user._id,
-      $or: [{ state: 'inbox' }, { scheduledDate: null }],
       isCompleted: false,
+      $or: [
+        { state: 'inbox' },
+        { scheduledDate: null },
+        { repeat: { $ne: 'none' } },
+      ],
     })
       .populate('projectId', 'title color')
       .populate('goalId', 'title')
-      .sort({ createdAt: -1 });
+      .sort({ repeat: -1, priority: -1, createdAt: -1 });
+
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getCompletedTasks = async (req, res) => {
+  try {
+    const { category, projectId, search } = req.query;
+    const filter = { userId: req.user._id, isCompleted: true };
+
+    if (category) filter.category = category;
+    if (projectId) filter.projectId = projectId;
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const tasks = await Task.find(filter)
+      .populate('projectId', 'title color')
+      .populate('goalId', 'title')
+      .sort({ completedAt: -1, updatedAt: -1 });
 
     res.json(tasks);
   } catch (error) {
@@ -157,14 +189,12 @@ export const toggleTaskCompletion = async (req, res) => {
     const todayStr = new Date().toISOString().split('T')[0];
 
     if (!task.isCompleted) {
-      // Mark Completed
       task.isCompleted = true;
       task.completedAt = new Date();
       task.completedDateStr = todayStr;
       task.state = 'completed';
       await task.save();
 
-      // Record Activity Event
       const impactScore = task.priority === 'urgent' ? 3 : task.priority === 'high' ? 2 : 1;
       const activityData = await recordActivityEvent({
         userId: req.user._id,
@@ -180,10 +210,8 @@ export const toggleTaskCompletion = async (req, res) => {
         },
       });
 
-      // Handle Task Recurrence if applicable
       const nextInstance = await handleTaskRecurrence(task);
 
-      // If linked to a Goal, increment goal progress
       if (task.goalId) {
         await Goal.findByIdAndUpdate(task.goalId, { $inc: { currentValue: 1 } });
       }
@@ -195,7 +223,6 @@ export const toggleTaskCompletion = async (req, res) => {
         message: 'Task completed!',
       });
     } else {
-      // Mark Uncompleted
       task.isCompleted = false;
       task.completedAt = null;
       task.completedDateStr = null;
@@ -236,7 +263,7 @@ export const updateTask = async (req, res) => {
 
 export const moveTask = async (req, res) => {
   try {
-    const { target } = req.body; // 'today', 'tomorrow', 'inbox', or YYYY-MM-DD
+    const { target } = req.body;
     const task = await Task.findOne({ _id: req.params.id, userId: req.user._id });
     if (!task) return res.status(404).json({ message: 'Task not found' });
 
@@ -255,13 +282,56 @@ export const moveTask = async (req, res) => {
       task.scheduledDate = null;
       task.state = 'inbox';
     } else {
-      // Custom date string
       task.scheduledDate = target;
       task.state = 'scheduled';
     }
 
     await task.save();
     res.json(task);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const batchRescheduleTasks = async (req, res) => {
+  try {
+    const { taskIds, target } = req.body;
+    if (!taskIds || !Array.isArray(taskIds)) {
+      return res.status(400).json({ message: 'taskIds array is required' });
+    }
+
+    let targetDate = null;
+    if (target === 'next_week') {
+      const nextMon = new Date();
+      nextMon.setDate(nextMon.getDate() + ((7 - nextMon.getDay() + 1) % 7 || 7));
+      targetDate = nextMon.toISOString().split('T')[0];
+    } else if (target === 'today') {
+      targetDate = new Date().toISOString().split('T')[0];
+    }
+
+    await Task.updateMany(
+      { _id: { $in: taskIds }, userId: req.user._id },
+      {
+        scheduledDate: targetDate,
+        state: targetDate ? 'scheduled' : 'inbox',
+      }
+    );
+
+    res.json({ message: `Rescheduled ${taskIds.length} tasks successfully` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const batchCleanupTasks = async (req, res) => {
+  try {
+    const { taskIds } = req.body;
+    if (!taskIds || !Array.isArray(taskIds)) {
+      return res.status(400).json({ message: 'taskIds array is required' });
+    }
+
+    await Task.deleteMany({ _id: { $in: taskIds }, userId: req.user._id });
+    res.json({ message: `Cleaned up ${taskIds.length} tasks` });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
