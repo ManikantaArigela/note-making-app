@@ -15,6 +15,7 @@ import achievementRoutes from './routes/achievementRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
+import roadmapRoutes from './routes/roadmapRoutes.js';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use('/api/achievements', achievementRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/roadmaps', roadmapRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Productivity Application API is running smoothly 🚀' });

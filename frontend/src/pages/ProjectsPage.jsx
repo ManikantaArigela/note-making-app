@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
-import { FolderKanban, Plus, X } from 'lucide-react';
+import { FolderKanban, Plus, X, Route, Calendar, CheckCircle2 } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 
 export const ProjectsPage = () => {
-  const { triggerRefresh } = useTasks();
+  const { triggerRefresh, refreshTrigger } = useTasks();
   const [projects, setProjects] = useState([]);
+  const [roadmaps, setRoadmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -17,13 +18,18 @@ export const ProjectsPage = () => {
   const [deadline, setDeadline] = useState('');
 
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    fetchProjectsAndRoadmaps();
+  }, [refreshTrigger]);
 
-  const fetchProjects = async () => {
+  const fetchProjectsAndRoadmaps = async () => {
     try {
-      const { data } = await axiosClient.get('/projects');
-      setProjects(data || []);
+      setLoading(true);
+      const [projRes, rmRes] = await Promise.all([
+        axiosClient.get('/projects'),
+        axiosClient.get('/roadmaps'),
+      ]);
+      setProjects(projRes.data || []);
+      setRoadmaps(rmRes.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -46,7 +52,7 @@ export const ProjectsPage = () => {
       setIsModalOpen(false);
       setTitle('');
       setDescription('');
-      fetchProjects();
+      fetchProjectsAndRoadmaps();
       triggerRefresh();
     } catch (err) {
       console.error(err);
@@ -58,8 +64,11 @@ export const ProjectsPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Projects</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Organize multi-task initiatives and track progress</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <FolderKanban className="w-6 h-6 text-[#1b3b2b]" />
+            <span>Projects & Initiative Workflows</span>
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">Organize multi-task initiatives and track roadmap progress</p>
         </div>
 
         <button
@@ -85,57 +94,87 @@ export const ProjectsPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => (
-            <div
-              key={project._id}
-              className="bg-white border border-[#e2e5dc] hover:border-slate-400/60 rounded-2xl p-5 shadow-sm space-y-4 transition-all"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm"
-                    style={{ backgroundColor: project.color || '#1b3b2b' }}
-                  />
-                  <h3 className="text-base font-bold text-slate-900 tracking-tight">{project.title}</h3>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                  {project.category}
-                </span>
-              </div>
+          {projects.map((project) => {
+            const projectRoadmaps = roadmaps.filter((r) => r.projectId?._id === project._id || r.projectId === project._id);
 
-              {project.description && (
-                <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{project.description}</p>
-              )}
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-2 text-center bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
-                <div>
-                  <span className="text-slate-500 text-[10px] block">Tasks</span>
-                  <span className="font-bold text-slate-900">
-                    {project.completedTasks}/{project.totalTasks}
+            return (
+              <div
+                key={project._id}
+                className="bg-white border border-[#e2e5dc] hover:border-slate-400/60 rounded-2xl p-5 shadow-sm space-y-4 transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm"
+                      style={{ backgroundColor: project.color || '#1b3b2b' }}
+                    />
+                    <h3 className="text-base font-bold text-slate-900 tracking-tight">{project.title}</h3>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                    {project.category}
                   </span>
                 </div>
-                <div>
-                  <span className="text-slate-500 text-[10px] block">Focus Hours</span>
-                  <span className="font-bold text-[#1b3b2b]">{project.totalFocusHours}h</span>
-                </div>
-              </div>
 
-              {/* Progress bar */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-[11px] font-semibold">
-                  <span className="text-slate-500">Progress</span>
-                  <span className="text-[#1b3b2b]">{project.progress}%</span>
+                {project.description && (
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{project.description}</p>
+                )}
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-2 text-center bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                  <div>
+                    <span className="text-slate-500 text-[10px] block">Tasks</span>
+                    <span className="font-bold text-slate-900">
+                      {project.completedTasks}/{project.totalTasks}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 text-[10px] block">Focus Hours</span>
+                    <span className="font-bold text-[#1b3b2b]">{project.totalFocusHours}h</span>
+                  </div>
                 </div>
-                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                  <div
-                    className="h-full bg-[#1b3b2b] rounded-full transition-all duration-300"
-                    style={{ width: `${project.progress}%` }}
-                  />
+
+                {/* Attached Roadmaps */}
+                {projectRoadmaps.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Attached Roadmap
+                    </span>
+                    {projectRoadmaps.map((rm) => (
+                      <div key={rm._id} className="bg-[#f4f7f4] border border-[#d6e2d5] rounded-xl p-2.5 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                          <span className="flex items-center gap-1">
+                            <Route className="w-3.5 h-3.5 text-[#1b3b2b]" />
+                            {rm.title}
+                          </span>
+                          <span className="text-[#1b3b2b]">{rm.progress}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#1b3b2b] rounded-full transition-all duration-300"
+                            style={{ width: `${rm.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Progress bar */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-semibold">
+                    <span className="text-slate-500">Overall Progress</span>
+                    <span className="text-[#1b3b2b] font-bold">{project.progress}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                    <div
+                      className="h-full bg-[#1b3b2b] rounded-full transition-all duration-300"
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

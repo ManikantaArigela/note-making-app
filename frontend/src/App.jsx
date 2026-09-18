@@ -8,6 +8,7 @@ import { TomorrowPage } from './pages/TomorrowPage';
 import { InboxPage } from './pages/InboxPage';
 import { CompletedPage } from './pages/CompletedPage';
 import { GoalsPage } from './pages/GoalsPage';
+import { RoadmapPage } from './pages/RoadmapPage';
 import { WeeklyResetPage } from './pages/WeeklyResetPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { FriendsPage } from './pages/FriendsPage';
@@ -41,8 +42,10 @@ export function App() {
         return <InboxPage />;
       case 'completed':
         return <CompletedPage />;
+      case 'roadmap':
+        return <RoadmapPage />;
       case 'goals':
-        return <GoalsPage />;
+        return <RoadmapPage />;
       case 'weekly-reset':
         return <WeeklyResetPage />;
       case 'projects':

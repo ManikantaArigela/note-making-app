@@ -6,7 +6,7 @@ import {
   CalendarDays,
   Inbox,
   CheckCircle2,
-  Heart,
+  Route,
   RefreshCw,
   FolderKanban,
   Users,
@@ -23,7 +23,7 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   const focusNav = [
-    { id: 'goals', label: 'Goals', icon: Heart },
+    { id: 'roadmap', label: 'Roadmap', icon: Route },
     { id: 'weekly-reset', label: 'Weekly Reset', icon: RefreshCw },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
   ];
