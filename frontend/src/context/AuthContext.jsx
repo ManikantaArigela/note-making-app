@@ -5,10 +5,23 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('productivity_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('productivity_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      localStorage.removeItem('productivity_user');
+      return null;
+    }
   });
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -19,11 +32,13 @@ export const AuthProvider = ({ children }) => {
           setUser(data);
           localStorage.setItem('productivity_user', JSON.stringify(data));
         } catch (err) {
-          console.error('Auth verification failed:', err);
+          console.warn('Auth verification failed:', err.message);
           setUser(null);
           localStorage.removeItem('productivity_token');
           localStorage.removeItem('productivity_user');
         }
+      } else {
+        setUser(null);
       }
       setLoading(false);
     };
@@ -31,7 +46,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await axiosClient.post('/auth/login', { email, password });
+    const { data } = await axiosClient.post('/auth/login', {
+      email: email.trim().toLowerCase(),
+      password,
+    });
     localStorage.setItem('productivity_token', data.token);
     localStorage.setItem('productivity_user', JSON.stringify(data));
     setUser(data);
@@ -39,12 +57,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    const { data } = await axiosClient.post('/auth/register', { name, email, password });
+    const { data } = await axiosClient.post('/auth/register', {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+    });
     localStorage.setItem('productivity_token', data.token);
     localStorage.setItem('productivity_user', JSON.stringify(data));
     setUser(data);
     return data;
   };
+
 
   const logout = () => {
     localStorage.removeItem('productivity_token');

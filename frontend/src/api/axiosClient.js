@@ -21,15 +21,17 @@ axiosClient.interceptors.request.use(
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    const url = error.config?.url || '';
+    const isAuthRoute = url.includes('/auth/login') || url.includes('/auth/register');
+
+    if (error.response && error.response.status === 401 && !isAuthRoute) {
       localStorage.removeItem('productivity_token');
       localStorage.removeItem('productivity_user');
-      if (window.location.pathname !== '/auth') {
-        window.location.href = '/auth';
-      }
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
     return Promise.reject(error);
   }
 );
 
 export default axiosClient;
+
