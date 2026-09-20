@@ -8,5 +8,8 @@
     "frontend": "cd frontend && npm run dev",
     "seed": "cd backend && npm run seed",
     "build": "cd frontend && npm run build"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
   }
 }
