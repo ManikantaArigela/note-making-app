@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axiosClient from '../api/axiosClient';
 import { Settings, Bell, User as UserIcon, Lock } from 'lucide-react';
+import { useTaskReminder } from '../hooks/useTaskReminder';
 
 export const SettingsPage = () => {
   const { user, updateProfile, updatePreferences } = useAuth();
+  const { permissionStatus, requestNotificationPermission } = useTaskReminder();
 
   const [name, setName] = useState(user?.name || '');
   const [bio, setBio] = useState(user?.bio || '');
@@ -121,10 +123,30 @@ export const SettingsPage = () => {
         {prefMsg && <div className="text-emerald-700 text-xs font-semibold">{prefMsg}</div>}
 
         <form onSubmit={handleSavePreferences} className="space-y-4">
+          <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200">
+            <div>
+              <span className="font-bold text-slate-900 block">Mobile & Web Task Reminders</span>
+              <span className="text-slate-600 text-[11px]">
+                Deliver time-based notifications for tasks on mobile browsers and desktop apps
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={requestNotificationPermission}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                permissionStatus === 'granted'
+                  ? 'bg-emerald-700 text-white cursor-default'
+                  : 'bg-[#1b3b2b] hover:bg-[#132c1f] text-white'
+              }`}
+            >
+              {permissionStatus === 'granted' ? '✓ Permission Granted' : 'Enable Mobile Permissions'}
+            </button>
+          </div>
+
           <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
             <div>
-              <span className="font-bold text-slate-900 block">Push Notifications</span>
-              <span className="text-slate-500 text-[11px]">Receive motivational progress alerts on mobile & desktop</span>
+              <span className="font-bold text-slate-900 block">In-App Notification Alerts</span>
+              <span className="text-slate-500 text-[11px]">Receive motivational progress alerts in application</span>
             </div>
             <input
               type="checkbox"

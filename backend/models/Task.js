@@ -48,6 +48,11 @@ const taskSchema = new mongoose.Schema(
       type: String, // HH:mm format
       default: null,
     },
+    reminder: {
+      type: String,
+      enum: ['none', 'at_time', '10m', '30m', '1h'],
+      default: 'at_time',
+    },
     estimatedDuration: {
       type: Number, // in minutes
       default: 30,

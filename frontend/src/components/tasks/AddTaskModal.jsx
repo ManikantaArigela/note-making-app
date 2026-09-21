@@ -69,6 +69,7 @@ export const AddTaskModal = () => {
         description,
         scheduledDate: scheduledDate || null,
         dueTime: dueTime || null,
+        reminder: reminder || 'at_time',
         priority,
         category,
         projectId: projectId || null,

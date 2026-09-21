@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../../api/axiosClient';
-import { Bell, CheckCheck, Sparkles, X, ShieldCheck } from 'lucide-react';
+import { Bell, CheckCheck, Sparkles, X, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useTaskReminder } from '../../hooks/useTaskReminder';
 
 export const NotificationCenter = ({ onClose }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const { permissionStatus, requestNotificationPermission } = useTaskReminder();
 
   useEffect(() => {
     fetchNotifications();
@@ -28,29 +31,6 @@ export const NotificationCenter = ({ onClose }) => {
       await axiosClient.patch('/notifications/all/read');
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const requestPushPermission = async () => {
-    if (!('Notification' in window) || !('serviceWorker' in window)) {
-      alert('Push notifications are not supported by this browser.');
-      return;
-    }
-
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: 'BEl62iUYgUivxIkv69yViEuiBIa-m9GYv54L356v5Yk',
-        });
-
-        await axiosClient.post('/notifications/subscribe', { subscription: sub });
-        alert('Push notifications enabled successfully! 🚀');
-      }
     } catch (err) {
       console.error(err);
     }
@@ -89,14 +69,24 @@ export const NotificationCenter = ({ onClose }) => {
       <div className="bg-[#d6e2d5]/60 border-b border-[#e2e5dc] p-3 flex items-center justify-between text-xs">
         <div className="flex items-center gap-2 text-[#1b3b2b] font-semibold">
           <ShieldCheck className="w-4 h-4 text-[#1b3b2b] shrink-0" />
-          <span>Enable mobile push alerts</span>
+          <span>
+            {permissionStatus === 'granted'
+              ? 'Time-based mobile alerts active'
+              : 'Enable mobile & web task alerts'}
+          </span>
         </div>
-        <button
-          onClick={requestPushPermission}
-          className="px-2.5 py-1 rounded-lg bg-[#1b3b2b] hover:bg-[#132c1f] text-white font-bold text-[10px] shadow-sm"
-        >
-          Enable
-        </button>
+        {permissionStatus === 'granted' ? (
+          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-800">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Active
+          </span>
+        ) : (
+          <button
+            onClick={requestNotificationPermission}
+            className="px-2.5 py-1 rounded-lg bg-[#1b3b2b] hover:bg-[#132c1f] text-white font-bold text-[10px] shadow-sm transition-all"
+          >
+            Enable
+          </button>
+        )}
       </div>
 
       {/* Notifications List */}

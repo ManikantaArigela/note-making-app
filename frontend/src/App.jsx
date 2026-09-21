@@ -18,6 +18,9 @@ export function App() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  // Initialize background task reminder checker
+  useTaskReminder();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f4f5f0] flex items-center justify-center text-slate-500 text-xs animate-pulse">
