@@ -88,7 +88,7 @@ export const AuthPage = () => {
                 <input
                   type="text"
                   required
-                  placeholder="Manikanta Arigela"
+                  placeholder="enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#1b3b2b] transition-colors"

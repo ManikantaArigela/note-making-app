@@ -1,15 +1,30 @@
 {
-  "short_name": "ApexPulse",
-  "name": "ApexPulse Personal Productivity",
+  "short_name": "FocusFlow",
+  "name": "FocusFlow - Personal Productivity & Notes",
+  "description": "Your sleek workspace for notes, tasks, and productivity tracking",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
+  "orientation": "any",
   "theme_color": "#0f172a",
-  "background_color": "#0f172a"
+  "background_color": "#0f172a",
+  "categories": ["productivity", "utilities"]
 }
