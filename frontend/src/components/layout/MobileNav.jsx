@@ -1,13 +1,15 @@
 import React from 'react';
-import { LayoutDashboard, CalendarCheck, CalendarDays, Inbox, Route, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, CalendarDays, Inbox, Route, RefreshCw, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const MobileNav = ({ activeTab, setActiveTab }) => {
+  const { user } = useAuth();
   const items = [
     { id: 'dashboard', label: 'Dash', icon: LayoutDashboard },
     { id: 'today', label: 'Today', icon: CalendarCheck },
     { id: 'tomorrow', label: 'Tomorrow', icon: CalendarDays },
-    { id: 'roadmap', label: 'Roadmap', icon: Route },
     { id: 'inbox', label: 'Inbox', icon: Inbox },
+    ...(user?.role === 'admin' ? [{ id: 'admin', label: 'Admin', icon: ShieldCheck }] : []),
     { id: 'weekly-reset', label: 'Reset', icon: RefreshCw },
   ];
 

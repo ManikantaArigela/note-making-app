@@ -55,6 +55,7 @@ export const registerUser = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role || 'user',
       avatar: user.avatar || '',
       bio: user.bio || 'Productivity seeker 🚀',
       level: user.level || 1,
@@ -95,6 +96,7 @@ export const loginUser = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role || 'user',
       avatar: user.avatar || '',
       bio: user.bio || 'Productivity seeker 🚀',
       level: user.level || 1,
@@ -106,6 +108,32 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Server error during login' });
+  }
+};
+
+export const ensureAdminUserExists = async () => {
+  try {
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@focusflow.com').toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    let adminUser = await User.findOne({ email: adminEmail });
+
+    if (!adminUser) {
+      adminUser = await User.create({
+        name: 'System Admin',
+        email: adminEmail,
+        password: adminPassword,
+        role: 'admin',
+        bio: 'FocusFlow Administrator 🛡️',
+      });
+      console.log(`[Admin Seed]: Default admin user created successfully (${adminEmail})`);
+    } else if (adminUser.role !== 'admin') {
+      adminUser.role = 'admin';
+      await adminUser.save();
+      console.log(`[Admin Seed]: Existing user (${adminEmail}) role updated to admin`);
+    }
+  } catch (err) {
+    console.warn('[Admin Seed Warning]:', err.message);
   }
 };
 

@@ -49,6 +49,11 @@ const userSchema = new mongoose.Schema(
       type: String, // YYYY-MM-DD
       default: '',
     },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
     preferences: {
       theme: {
         type: String,

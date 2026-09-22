@@ -4,7 +4,7 @@ import { useTasks } from '../../context/TaskContext';
 import axiosClient from '../../api/axiosClient';
 
 export const AddTaskModal = () => {
-  const { isAddTaskOpen, addTaskInitialState, closeAddTask, createTask } = useTasks();
+  const { isAddTaskOpen, addTaskInitialState, editingTask, closeAddTask, createTask, updateTask } = useTasks();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -25,7 +25,18 @@ export const AddTaskModal = () => {
     if (isAddTaskOpen) {
       axiosClient.get('/projects').then((res) => setProjects(res.data)).catch(() => {});
 
-      if (addTaskInitialState) {
+      if (editingTask) {
+        setTitle(editingTask.title || '');
+        setDescription(editingTask.description || '');
+        setScheduledDate(editingTask.scheduledDate || '');
+        setDueTime(editingTask.dueTime || '');
+        setPriority(editingTask.priority || 'medium');
+        setCategory(editingTask.category || 'Learning');
+        setProjectId(editingTask.projectId?._id || editingTask.projectId || '');
+        setRepeat(editingTask.repeat || 'none');
+        setReminder(editingTask.reminder || 'none');
+        setSubtasks(editingTask.subtasks ? [...editingTask.subtasks] : []);
+      } else if (addTaskInitialState) {
         setTitle(addTaskInitialState.title || '');
         setScheduledDate(addTaskInitialState.scheduledDate || '');
         setCategory(addTaskInitialState.category || 'Learning');
@@ -43,7 +54,7 @@ export const AddTaskModal = () => {
         setSubtasks([]);
       }
     }
-  }, [isAddTaskOpen, addTaskInitialState]);
+  }, [isAddTaskOpen, addTaskInitialState, editingTask]);
 
   if (!isAddTaskOpen) return null;
 
@@ -62,23 +73,29 @@ export const AddTaskModal = () => {
     e.preventDefault();
     if (!title.trim()) return;
 
+    const payload = {
+      title: title.trim(),
+      description,
+      scheduledDate: scheduledDate || null,
+      dueTime: dueTime || null,
+      reminder: reminder || 'at_time',
+      priority,
+      category,
+      projectId: projectId || null,
+      repeat,
+      subtasks,
+    };
+
     try {
       setLoading(true);
-      await createTask({
-        title,
-        description,
-        scheduledDate: scheduledDate || null,
-        dueTime: dueTime || null,
-        reminder: reminder || 'at_time',
-        priority,
-        category,
-        projectId: projectId || null,
-        repeat,
-        subtasks,
-      });
+      if (editingTask) {
+        await updateTask(editingTask._id, payload);
+      } else {
+        await createTask(payload);
+      }
       closeAddTask();
     } catch (error) {
-      console.error('Error creating task:', error);
+      console.error('Error saving task:', error);
     } finally {
       setLoading(false);
     }
@@ -89,7 +106,9 @@ export const AddTaskModal = () => {
       <div className="bg-white border border-[#e2e5dc] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 my-6 text-slate-800">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h2 className="text-sm font-bold text-slate-900">Add New Task</h2>
+          <h2 className="text-sm font-bold text-slate-900">
+            {editingTask ? 'Edit Task Details' : 'Add New Task'}
+          </h2>
           <button
             onClick={closeAddTask}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
@@ -273,7 +292,7 @@ export const AddTaskModal = () => {
               disabled={loading || !title.trim()}
               className="px-5 py-2 rounded-xl bg-[#1b3b2b] hover:bg-[#132c1f] disabled:opacity-50 text-white text-xs font-bold shadow-sm transition-all"
             >
-              {loading ? 'Adding...' : 'Add Task'}
+              {loading ? (editingTask ? 'Saving...' : 'Adding...') : editingTask ? 'Save Changes' : 'Add Task'}
             </button>
           </div>
         </form>

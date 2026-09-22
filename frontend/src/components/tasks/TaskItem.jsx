@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Circle, Clock, MoreVertical, Trash2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, MoreVertical, Trash2, ArrowRight, Edit3 } from 'lucide-react';
 import { useTasks } from '../../context/TaskContext';
 
 export const TaskItem = ({ task }) => {
-  const { toggleTaskCompletion, moveTask, deleteTask } = useTasks();
+  const { toggleTaskCompletion, moveTask, deleteTask, openEditTask } = useTasks();
   const [showMenu, setShowMenu] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
 
@@ -93,6 +93,19 @@ export const TaskItem = ({ task }) => {
 
             {showMenu && (
               <div className="absolute right-0 top-7 w-40 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-20 text-xs">
+                <button
+                  onClick={() => {
+                    openEditTask(task);
+                    setShowMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between font-medium"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                    Edit Task
+                  </span>
+                </button>
+                <div className="my-1 border-t border-slate-100" />
                 <button
                   onClick={() => {
                     moveTask(task._id, 'today');

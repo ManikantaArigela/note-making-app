@@ -11,10 +11,13 @@ import {
   Users,
   Settings,
   Download,
+  ShieldCheck,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { InstallAppModal } from './InstallAppModal';
 
 export const Sidebar = ({ activeTab, setActiveTab }) => {
+  const { user } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -56,6 +59,10 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'roadmap', label: 'Roadmap', icon: Route },
     { id: 'weekly-reset', label: 'Weekly Reset', icon: RefreshCw },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
+  ];
+
+  const adminNav = [
+    { id: 'admin', label: 'Admin Portal', icon: ShieldCheck },
   ];
 
   const secondaryNav = [
@@ -119,6 +126,16 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
             </div>
             {renderNavGroup(focusNav)}
           </div>
+
+          {/* Admin Nav if user is admin */}
+          {user?.role === 'admin' && (
+            <div>
+              <div className="px-3.5 mb-2 text-[10px] font-bold text-amber-700 uppercase tracking-wider">
+                ADMINISTRATION
+              </div>
+              {renderNavGroup(adminNav)}
+            </div>
+          )}
 
           {/* Account Nav */}
           <div>

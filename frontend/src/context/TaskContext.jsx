@@ -6,16 +6,25 @@ const TaskContext = createContext();
 export const TaskProvider = ({ children }) => {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [addTaskInitialState, setAddTaskInitialState] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const openAddTask = useCallback((initialData = null) => {
+    setEditingTask(null);
     setAddTaskInitialState(initialData);
+    setIsAddTaskOpen(true);
+  }, []);
+
+  const openEditTask = useCallback((task) => {
+    setAddTaskInitialState(null);
+    setEditingTask(task);
     setIsAddTaskOpen(true);
   }, []);
 
   const closeAddTask = useCallback(() => {
     setIsAddTaskOpen(false);
     setAddTaskInitialState(null);
+    setEditingTask(null);
   }, []);
 
   const triggerRefresh = useCallback(() => {
@@ -24,6 +33,12 @@ export const TaskProvider = ({ children }) => {
 
   const createTask = async (taskData) => {
     const { data } = await axiosClient.post('/tasks', taskData);
+    triggerRefresh();
+    return data;
+  };
+
+  const updateTask = async (taskId, taskData) => {
+    const { data } = await axiosClient.put(`/tasks/${taskId}`, taskData);
     triggerRefresh();
     return data;
   };
@@ -50,9 +65,12 @@ export const TaskProvider = ({ children }) => {
       value={{
         isAddTaskOpen,
         addTaskInitialState,
+        editingTask,
         openAddTask,
+        openEditTask,
         closeAddTask,
         createTask,
+        updateTask,
         toggleTaskCompletion,
         moveTask,
         deleteTask,

@@ -14,6 +14,7 @@ import { WeeklyResetPage } from './pages/WeeklyResetPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { FriendsPage } from './pages/FriendsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AdminPage } from './pages/AdminPage';
 
 export function App() {
   const { user, loading } = useAuth();
@@ -58,6 +59,8 @@ export function App() {
         return <FriendsPage />;
       case 'settings':
         return <SettingsPage />;
+      case 'admin':
+        return <AdminPage />;
       default:
         return <DashboardPage />;
     }

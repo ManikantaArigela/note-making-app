@@ -5,6 +5,7 @@ import { connectDB } from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 import authRoutes from './routes/authRoutes.js';
+import { ensureAdminUserExists } from './controllers/authController.js';
 import taskRoutes from './routes/taskRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import habitRoutes from './routes/habitRoutes.js';
@@ -16,11 +17,14 @@ import friendRoutes from './routes/friendRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import roadmapRoutes from './routes/roadmapRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB & Seed Admin User
+connectDB().then(() => {
+  ensureAdminUserExists();
+});
 
 const app = express();
 
@@ -68,6 +72,7 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/roadmaps', roadmapRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Productivity Application API is running smoothly 🚀' });
