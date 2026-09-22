@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Compass, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export const AuthPage = () => {
   const { login, register } = useAuth();
@@ -56,11 +56,12 @@ export const AuthPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f4f5f0] flex flex-col justify-center py-12 sm:px-6 lg:px-8 select-none text-slate-800">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-2">
-        <div className="w-12 h-12 rounded-2xl bg-[#1b3b2b] flex items-center justify-center mx-auto shadow-md">
-          <Compass className="w-6 h-6 text-white" />
-        </div>
-        <h2 className="text-2xl font-extrabold text-[#1b3b2b] tracking-tight">FocusFlow</h2>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3 flex flex-col items-center justify-center px-4">
+        <img
+          src="/logo.png"
+          alt="FocusFlow Logo"
+          className="h-12 sm:h-14 w-auto object-contain drop-shadow-xs"
+        />
         <p className="text-xs font-semibold text-slate-500">Focus on what matters. One task at a time.</p>
       </div>
 

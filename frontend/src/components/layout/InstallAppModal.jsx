@@ -28,9 +28,9 @@ export const InstallAppModal = ({ isOpen, onClose, deferredPrompt, onInstallSucc
           </button>
           
           <img
-            src="/pwa-192x192.png"
+            src="/logo-icon.png"
             alt="FocusFlow Logo"
-            className="w-16 h-16 rounded-2xl shadow-lg border-2 border-slate-700/50 mb-3"
+            className="h-14 w-auto object-contain mb-3 filter drop-shadow-md"
           />
           <h2 className="text-xl font-extrabold tracking-tight">Install FocusFlow App</h2>
           <p className="text-xs text-slate-300 mt-1 max-w-xs">

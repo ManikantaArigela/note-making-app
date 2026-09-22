@@ -107,13 +107,12 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
       <aside className="w-60 bg-[#f4f5f0] border-r border-[#e2e5dc] flex flex-col justify-between hidden md:flex h-screen sticky top-0 select-none p-4">
         <div className="space-y-6 overflow-y-auto">
           {/* Brand Header with New Logo */}
-          <div className="flex items-center gap-3 px-2 py-1">
+          <div className="flex items-center px-2 py-1">
             <img
-              src="/pwa-192x192.png"
+              src="/logo.png"
               alt="FocusFlow Logo"
-              className="w-8 h-8 rounded-xl shadow-md border border-slate-700/10 object-cover"
+              className="h-9 w-auto max-w-full object-contain filter drop-shadow-xs"
             />
-            <h1 className="text-base font-extrabold text-[#1b3b2b] tracking-tight">FocusFlow</h1>
           </div>
 
           {/* Main Nav */}

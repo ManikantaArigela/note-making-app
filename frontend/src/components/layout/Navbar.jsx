@@ -13,9 +13,8 @@ export const Navbar = () => {
   return (
     <header className="h-14 bg-[#f4f5f0]/90 backdrop-blur-md border-b border-[#e2e5dc] px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 select-none">
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 md:hidden">
-          <img src="/pwa-192x192.png" alt="FocusFlow" className="w-6 h-6 rounded-md shadow-xs object-cover" />
-          <span className="font-extrabold text-[#1b3b2b] text-sm">FocusFlow</span>
+        <div className="flex items-center md:hidden">
+          <img src="/logo.png" alt="FocusFlow" className="h-7 w-auto max-w-[130px] object-contain" />
         </div>
         <span className="text-xs font-semibold text-slate-500 hidden sm:inline-block">
           {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
