@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from './context/AuthContext';
+import { useTaskReminder } from './hooks/useTaskReminder';
 import { Layout } from './components/layout/Layout';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -48,7 +49,7 @@ export function App() {
       case 'roadmap':
         return <RoadmapPage />;
       case 'goals':
-        return <RoadmapPage />;
+        return <GoalsPage />;
       case 'weekly-reset':
         return <WeeklyResetPage />;
       case 'projects':
