@@ -33,10 +33,14 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@focusflow.com').toLowerCase();
+    const role = cleanEmail === adminEmail ? 'admin' : 'user';
+
     const user = await User.create({
       name: cleanName,
       email: cleanEmail,
       password,
+      role,
     });
 
     // Create a welcoming notification for the new user
@@ -86,10 +90,61 @@ export const loginUser = async (req, res) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@focusflow.com').toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    // Failsafe auto-grant / sync for admin user credentials
+    if (cleanEmail === adminEmail && password === adminPassword) {
+      let adminUser = await User.findOne({ email: adminEmail }).select('+password');
+      if (!adminUser) {
+        adminUser = await User.create({
+          name: 'System Admin',
+          email: adminEmail,
+          password: adminPassword,
+          role: 'admin',
+          bio: 'FocusFlow Administrator 🛡️',
+        });
+      } else {
+        let dirty = false;
+        if (adminUser.role !== 'admin') {
+          adminUser.role = 'admin';
+          dirty = true;
+        }
+        const matches = await adminUser.matchPassword(password);
+        if (!matches) {
+          adminUser.password = password;
+          dirty = true;
+        }
+        if (dirty) {
+          await adminUser.save();
+        }
+      }
+
+      return res.json({
+        _id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email,
+        role: adminUser.role,
+        avatar: adminUser.avatar || '',
+        bio: adminUser.bio || 'FocusFlow Administrator 🛡️',
+        level: adminUser.level || 1,
+        xp: adminUser.xp || 0,
+        currentStreak: adminUser.currentStreak || 0,
+        longestStreak: adminUser.longestStreak || 0,
+        preferences: adminUser.preferences,
+        token: generateToken(adminUser._id),
+      });
+    }
 
     const user = await User.findOne({ email: cleanEmail }).select('+password');
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Auto promote if user email is admin email
+    if (cleanEmail === adminEmail && user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
     }
 
     res.json({
@@ -116,7 +171,7 @@ export const ensureAdminUserExists = async () => {
     const adminEmail = (process.env.ADMIN_EMAIL || 'admin@focusflow.com').toLowerCase();
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 
-    let adminUser = await User.findOne({ email: adminEmail });
+    let adminUser = await User.findOne({ email: adminEmail }).select('+password');
 
     if (!adminUser) {
       adminUser = await User.create({
@@ -127,10 +182,21 @@ export const ensureAdminUserExists = async () => {
         bio: 'FocusFlow Administrator 🛡️',
       });
       console.log(`[Admin Seed]: Default admin user created successfully (${adminEmail})`);
-    } else if (adminUser.role !== 'admin') {
-      adminUser.role = 'admin';
-      await adminUser.save();
-      console.log(`[Admin Seed]: Existing user (${adminEmail}) role updated to admin`);
+    } else {
+      let dirty = false;
+      if (adminUser.role !== 'admin') {
+        adminUser.role = 'admin';
+        dirty = true;
+      }
+      const matches = await adminUser.matchPassword(adminPassword);
+      if (!matches) {
+        adminUser.password = adminPassword;
+        dirty = true;
+      }
+      if (dirty) {
+        await adminUser.save();
+        console.log(`[Admin Seed]: Admin credentials updated for ${adminEmail}`);
+      }
     }
   } catch (err) {
     console.warn('[Admin Seed Warning]:', err.message);
