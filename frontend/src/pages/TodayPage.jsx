@@ -5,10 +5,11 @@ import { TaskItem } from '../components/tasks/TaskItem';
 import { Plus, ChevronRight } from 'lucide-react';
 
 export const TodayPage = () => {
-  const { openAddTask, refreshTrigger } = useTasks();
+  const { openAddTask, refreshTrigger, deduplicateTasks } = useTasks();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [cleaning, setCleaning] = useState(false);
 
   useEffect(() => {
     fetchTodayTasks();
@@ -22,6 +23,21 @@ export const TodayPage = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTaskComplete = (taskId) => {
+    setTasks((prev) => prev.filter((t) => t._id !== taskId));
+  };
+
+  const handleCleanDuplicates = async () => {
+    try {
+      setCleaning(true);
+      await deduplicateTasks();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCleaning(false);
     }
   };
 
@@ -56,6 +72,14 @@ export const TodayPage = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleCleanDuplicates}
+            disabled={cleaning}
+            className="px-3 py-1.5 rounded-xl bg-white border border-[#e2e5dc] text-slate-600 hover:bg-slate-50 text-xs font-semibold shadow-sm transition-all"
+            title="Remove any repeated active tasks"
+          >
+            {cleaning ? 'Cleaning...' : '✨ Clean Duplicates'}
+          </button>
           <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white border border-[#e2e5dc] text-slate-600 shadow-sm">
             {formattedDate}
           </span>
@@ -118,7 +142,9 @@ export const TodayPage = () => {
               </button>
             </div>
           ) : (
-            filteredTasks.map((task) => <TaskItem key={task._id} task={task} />)
+            filteredTasks.map((task) => (
+              <TaskItem key={task._id} task={task} onComplete={handleTaskComplete} />
+            ))
           )}
         </div>
 

@@ -3,8 +3,34 @@ import { Goal } from '../models/Goal.js';
 import { recordActivityEvent } from '../services/activityService.js';
 import { handleTaskRecurrence } from '../services/taskRecurrenceService.js';
 
+export const deduplicateUserTasks = async (userId) => {
+  try {
+    const activeTasks = await Task.find({ userId, isCompleted: false }).sort({ updatedAt: -1, createdAt: -1 });
+    const seenTitles = new Set();
+    const duplicateIds = [];
+
+    for (const task of activeTasks) {
+      const normalizedTitle = task.title.trim().toLowerCase();
+      if (seenTitles.has(normalizedTitle)) {
+        duplicateIds.push(task._id);
+      } else {
+        seenTitles.add(normalizedTitle);
+      }
+    }
+
+    if (duplicateIds.length > 0) {
+      await Task.deleteMany({ _id: { $in: duplicateIds } });
+    }
+    return duplicateIds.length;
+  } catch (err) {
+    console.error('Error during auto-deduplication:', err);
+    return 0;
+  }
+};
+
 export const getTasks = async (req, res) => {
   try {
+    await deduplicateUserTasks(req.user._id);
     const { state, date, projectId, goalId, category, priority, search, isCompleted } = req.query;
     const filter = { userId: req.user._id };
 
@@ -36,6 +62,7 @@ export const getTasks = async (req, res) => {
 
 export const getTodayTasks = async (req, res) => {
   try {
+    await deduplicateUserTasks(req.user._id);
     const todayStr = new Date().toISOString().split('T')[0];
 
     // Only return uncompleted tasks for today/overdue
@@ -59,6 +86,7 @@ export const getTodayTasks = async (req, res) => {
 
 export const getTomorrowTasks = async (req, res) => {
   try {
+    await deduplicateUserTasks(req.user._id);
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
@@ -80,6 +108,7 @@ export const getTomorrowTasks = async (req, res) => {
 
 export const getInboxTasks = async (req, res) => {
   try {
+    await deduplicateUserTasks(req.user._id);
     const tasks = await Task.find({
       userId: req.user._id,
       isCompleted: false,
@@ -144,8 +173,23 @@ export const createTask = async (req, res) => {
       labels,
     } = req.body;
 
-    if (!title) {
+    if (!title || !title.trim()) {
       return res.status(400).json({ message: 'Task title is required' });
+    }
+
+    const trimmedTitle = title.trim();
+
+    // Enforce task title uniqueness for active tasks
+    const existingTask = await Task.findOne({
+      userId: req.user._id,
+      isCompleted: false,
+      title: { $regex: new RegExp(`^${trimmedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+    });
+
+    if (existingTask) {
+      return res.status(400).json({
+        message: 'A task with this title already exists. Tasks must be unique.',
+      });
     }
 
     let calculatedState = state || 'inbox';
@@ -155,7 +199,7 @@ export const createTask = async (req, res) => {
 
     const task = await Task.create({
       userId: req.user._id,
-      title,
+      title: trimmedTitle,
       description: description || '',
       category: category || 'General',
       priority: priority || 'medium',
@@ -176,6 +220,15 @@ export const createTask = async (req, res) => {
       .populate('goalId', 'title');
 
     res.status(201).json(populatedTask);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const deduplicateTasks = async (req, res) => {
+  try {
+    const removedCount = await deduplicateUserTasks(req.user._id);
+    res.json({ message: `Deduplicated tasks. Removed ${removedCount} duplicate(s).`, removedCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

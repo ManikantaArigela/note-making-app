@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import { ConnectionProvider } from './context/ConnectionContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { TaskProvider } from './context/TaskContext.jsx';
 import './index.css';
@@ -16,10 +17,13 @@ if ('serviceWorker' in navigator) {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AuthProvider>
-      <TaskProvider>
-        <App />
-      </TaskProvider>
-    </AuthProvider>
+    <ConnectionProvider>
+      <AuthProvider>
+        <TaskProvider>
+          <App />
+        </TaskProvider>
+      </AuthProvider>
+    </ConnectionProvider>
   </React.StrictMode>
 );
+

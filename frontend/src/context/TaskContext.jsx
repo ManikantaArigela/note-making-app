@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 
 const TaskContext = createContext();
@@ -31,33 +31,96 @@ export const TaskProvider = ({ children }) => {
     setRefreshTrigger((prev) => prev + 1);
   }, []);
 
+  // Real-time Auto Sync: Polling when active + Instant sync on window focus
+  useEffect(() => {
+    let intervalId;
+
+    const handleFocusOrVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        triggerRefresh();
+      }
+    };
+
+    // Auto sync every 15s when active tab
+    intervalId = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        triggerRefresh();
+      }
+    }, 15000);
+
+    window.addEventListener('focus', handleFocusOrVisibility);
+    document.addEventListener('visibilitychange', handleFocusOrVisibility);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocusOrVisibility);
+      document.removeEventListener('visibilitychange', handleFocusOrVisibility);
+    };
+  }, [triggerRefresh]);
+
   const createTask = async (taskData) => {
-    const { data } = await axiosClient.post('/tasks', taskData);
-    triggerRefresh();
-    return data;
+    try {
+      const { data } = await axiosClient.post('/tasks', taskData);
+      triggerRefresh();
+      return data;
+    } catch (error) {
+      console.error('[TaskContext Error]: Failed to create task:', error.message);
+      throw error;
+    }
   };
 
   const updateTask = async (taskId, taskData) => {
-    const { data } = await axiosClient.put(`/tasks/${taskId}`, taskData);
-    triggerRefresh();
-    return data;
+    try {
+      const { data } = await axiosClient.put(`/tasks/${taskId}`, taskData);
+      triggerRefresh();
+      return data;
+    } catch (error) {
+      console.error('[TaskContext Error]: Failed to update task:', error.message);
+      throw error;
+    }
   };
 
   const toggleTaskCompletion = async (taskId) => {
-    const { data } = await axiosClient.patch(`/tasks/${taskId}/toggle`);
-    triggerRefresh();
-    return data;
+    try {
+      const { data } = await axiosClient.patch(`/tasks/${taskId}/toggle`);
+      triggerRefresh();
+      return data;
+    } catch (error) {
+      console.error('[TaskContext Error]: Failed to toggle task completion:', error.message);
+      throw error;
+    }
   };
 
   const moveTask = async (taskId, target) => {
-    const { data } = await axiosClient.patch(`/tasks/${taskId}/move`, { target });
-    triggerRefresh();
-    return data;
+    try {
+      const { data } = await axiosClient.patch(`/tasks/${taskId}/move`, { target });
+      triggerRefresh();
+      return data;
+    } catch (error) {
+      console.error('[TaskContext Error]: Failed to move task:', error.message);
+      throw error;
+    }
   };
 
   const deleteTask = async (taskId) => {
-    await axiosClient.delete(`/tasks/${taskId}`);
-    triggerRefresh();
+    try {
+      await axiosClient.delete(`/tasks/${taskId}`);
+      triggerRefresh();
+    } catch (error) {
+      console.error('[TaskContext Error]: Failed to delete task:', error.message);
+      throw error;
+    }
+  };
+
+  const deduplicateTasks = async () => {
+    try {
+      const { data } = await axiosClient.post('/tasks/deduplicate');
+      triggerRefresh();
+      return data;
+    } catch (error) {
+      console.error('[TaskContext Error]: Failed to deduplicate tasks:', error.message);
+      throw error;
+    }
   };
 
   return (
@@ -74,6 +137,7 @@ export const TaskProvider = ({ children }) => {
         toggleTaskCompletion,
         moveTask,
         deleteTask,
+        deduplicateTasks,
         refreshTrigger,
         triggerRefresh,
       }}
@@ -84,3 +148,4 @@ export const TaskProvider = ({ children }) => {
 };
 
 export const useTasks = () => useContext(TaskContext);
+

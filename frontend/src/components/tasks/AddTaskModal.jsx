@@ -20,9 +20,11 @@ export const AddTaskModal = () => {
 
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (isAddTaskOpen) {
+      setErrorMessage('');
       axiosClient.get('/projects').then((res) => setProjects(res.data)).catch(() => {});
 
       if (editingTask) {
@@ -71,6 +73,7 @@ export const AddTaskModal = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
     if (!title.trim()) return;
 
     const payload = {
@@ -96,6 +99,8 @@ export const AddTaskModal = () => {
       closeAddTask();
     } catch (error) {
       console.error('Error saving task:', error);
+      const apiMsg = error.response?.data?.message || 'Failed to save task. Duplicate titles are not allowed.';
+      setErrorMessage(apiMsg);
     } finally {
       setLoading(false);
     }
@@ -119,6 +124,13 @@ export const AddTaskModal = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {errorMessage && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl animate-in fade-in duration-150 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           {/* Title */}
           <div>
             <input

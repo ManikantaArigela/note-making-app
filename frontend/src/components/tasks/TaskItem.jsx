@@ -1,20 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle2, Circle, Clock, MoreVertical, Trash2, ArrowRight, Edit3 } from 'lucide-react';
 import { useTasks } from '../../context/TaskContext';
 
-export const TaskItem = ({ task }) => {
+export const TaskItem = ({ task, onComplete }) => {
   const { toggleTaskCompletion, moveTask, deleteTask, openEditTask } = useTasks();
   const [showMenu, setShowMenu] = useState(false);
-  const [isToggling, setIsToggling] = useState(false);
+  const [isCompletedLocal, setIsCompletedLocal] = useState(task.isCompleted);
+  const [isCompleting, setIsCompleting] = useState(false);
 
-  const handleToggle = async () => {
-    try {
-      setIsToggling(true);
-      await toggleTaskCompletion(task._id);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsToggling(false);
+  useEffect(() => {
+    setIsCompletedLocal(task.isCompleted);
+  }, [task.isCompleted]);
+
+  const handleToggle = async (e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    if (!isCompletedLocal) {
+      setIsCompletedLocal(true);
+      setIsCompleting(true);
+
+      setTimeout(async () => {
+        if (onComplete) {
+          onComplete(task._id);
+        }
+        try {
+          await toggleTaskCompletion(task._id);
+        } catch (err) {
+          console.error('[TaskItem Toggle Error]:', err);
+          setIsCompletedLocal(false);
+          setIsCompleting(false);
+        }
+      }, 300);
+    } else {
+      const previousState = isCompletedLocal;
+      setIsCompletedLocal(false);
+      setIsCompleting(false);
+      try {
+        await toggleTaskCompletion(task._id);
+      } catch (err) {
+        console.error('[TaskItem Toggle Error]:', err);
+        setIsCompletedLocal(previousState);
+      }
     }
   };
 
@@ -36,20 +65,25 @@ export const TaskItem = ({ task }) => {
 
   return (
     <div
-      className={`group bg-white border border-[#e2e5dc] hover:border-slate-400/60 rounded-2xl p-4 transition-all duration-200 shadow-sm ${
-        task.isCompleted ? 'opacity-65 bg-slate-50' : ''
+      className={`group bg-white border border-[#e2e5dc] hover:border-slate-400/60 rounded-2xl p-4 transition-all ease-in-out shadow-sm ${
+        isCompleting
+          ? 'scale-95 opacity-0 -translate-x-4 max-h-0 py-0 border-0 my-0 overflow-hidden duration-300 pointer-events-none'
+          : isCompletedLocal
+          ? 'opacity-65 bg-slate-50 duration-200'
+          : 'duration-200'
       }`}
     >
       <div className="flex items-center justify-between gap-3">
         {/* Left: Checkbox & Info */}
-        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <button
+            type="button"
             onClick={handleToggle}
-            disabled={isToggling}
-            className="text-slate-400 hover:text-[#1b3b2b] transition-colors focus:outline-none shrink-0"
+            className="w-8 h-8 flex items-center justify-center -ml-1 text-slate-400 hover:text-[#1b3b2b] hover:bg-slate-100 active:scale-90 transition-all rounded-lg focus:outline-none shrink-0 cursor-pointer"
+            title={isCompletedLocal ? "Mark task as incomplete" : "Mark task as complete"}
           >
-            {task.isCompleted ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
+            {isCompletedLocal ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100 animate-in zoom-in-90 duration-150" />
             ) : (
               <Circle className="w-5 h-5 stroke-[1.75]" />
             )}
@@ -57,8 +91,8 @@ export const TaskItem = ({ task }) => {
 
           <div className="min-w-0 flex-1">
             <h3
-              className={`text-xs font-bold text-slate-900 leading-snug break-words ${
-                task.isCompleted ? 'line-through text-slate-400 font-normal' : ''
+              className={`text-xs font-bold text-slate-900 leading-snug break-words transition-all duration-150 ${
+                isCompletedLocal ? 'line-through text-emerald-700/70 font-normal' : ''
               }`}
             >
               {task.title}

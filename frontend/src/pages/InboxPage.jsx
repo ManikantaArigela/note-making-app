@@ -5,10 +5,11 @@ import { TaskItem } from '../components/tasks/TaskItem';
 import { Plus } from 'lucide-react';
 
 export const InboxPage = () => {
-  const { openAddTask, refreshTrigger } = useTasks();
+  const { openAddTask, refreshTrigger, deduplicateTasks } = useTasks();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [cleaning, setCleaning] = useState(false);
 
   useEffect(() => {
     fetchInboxTasks();
@@ -22,6 +23,21 @@ export const InboxPage = () => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTaskComplete = (taskId) => {
+    setTasks((prev) => prev.filter((t) => t._id !== taskId));
+  };
+
+  const handleCleanDuplicates = async () => {
+    try {
+      setCleaning(true);
+      await deduplicateTasks();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCleaning(false);
     }
   };
 
@@ -53,13 +69,24 @@ export const InboxPage = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => openAddTask()}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1b3b2b] hover:bg-[#132c1f] text-white text-xs font-bold shadow-sm transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Task</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCleanDuplicates}
+            disabled={cleaning}
+            className="px-3 py-2 rounded-xl bg-white border border-[#e2e5dc] text-slate-600 hover:bg-slate-50 text-xs font-semibold shadow-sm transition-all"
+            title="Remove duplicate active tasks"
+          >
+            {cleaning ? 'Cleaning...' : '✨ Clean Duplicates'}
+          </button>
+
+          <button
+            onClick={() => openAddTask()}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1b3b2b] hover:bg-[#132c1f] text-white text-xs font-bold shadow-sm transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Task</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Chips Bar */}
@@ -155,7 +182,7 @@ export const InboxPage = () => {
       ) : (
         <div className="space-y-2.5">
           {filteredTasks.map((task) => (
-            <TaskItem key={task._id} task={task} />
+            <TaskItem key={task._id} task={task} onComplete={handleTaskComplete} />
           ))}
         </div>
       )}

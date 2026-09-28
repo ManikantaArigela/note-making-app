@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDB } from './config/db.js';
+import mongoose from 'mongoose';
+import { connectDB, checkDBHealth } from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 import authRoutes from './routes/authRoutes.js';
@@ -21,9 +22,13 @@ import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
-// Connect to MongoDB & Seed Admin User
-connectDB().then(() => {
-  ensureAdminUserExists();
+// Global Exception Handlers
+process.on('uncaughtException', (err) => {
+  console.error('[Fatal Uncaught Exception]:', err.stack || err.message);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection at Promise]:', promise, 'reason:', reason);
 });
 
 const app = express();
@@ -59,6 +64,20 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 app.use(express.json());
 
+// Health Check Endpoint
+app.get('/api/health', (req, res) => {
+  const dbHealth = checkDBHealth();
+  const uptimeSeconds = Math.floor(process.uptime());
+  const statusCode = dbHealth.status === 'ok' ? 200 : 503;
+
+  res.status(statusCode).json({
+    status: dbHealth.status,
+    database: dbHealth,
+    uptime: `${uptimeSeconds}s`,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -75,7 +94,10 @@ app.use('/api/roadmaps', roadmapRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Productivity Application API is running smoothly 🚀' });
+  res.json({
+    message: 'Productivity Application API is running smoothly 🚀',
+    dbState: checkDBHealth().state,
+  });
 });
 
 app.use(notFound);
@@ -83,6 +105,38 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`[Server Running]: http://localhost:${PORT}`);
-});
+let server;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    await ensureAdminUserExists();
+
+    server = app.listen(PORT, () => {
+      console.log(`[Server Running]: http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('[Server Startup Failure]:', err.message);
+  }
+};
+
+startServer();
+
+// Graceful Shutdown Handler
+const shutdown = async (signal) => {
+  console.log(`[Signal ${signal}]: Closing HTTP server and MongoDB connections...`);
+  if (server) {
+    server.close(async () => {
+      console.log('[HTTP Server Closed]');
+      await mongoose.connection.close(false);
+      console.log('[MongoDB Connection Closed]');
+      process.exit(0);
+    });
+  } else {
+    process.exit(0);
+  }
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+

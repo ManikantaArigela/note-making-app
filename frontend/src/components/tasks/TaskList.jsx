@@ -2,7 +2,7 @@ import React from 'react';
 import { TaskItem } from './TaskItem';
 import { CheckCircle2, Inbox } from 'lucide-react';
 
-export const TaskList = ({ tasks = [], title, emptyMessage = 'No tasks found' }) => {
+export const TaskList = ({ tasks = [], title, emptyMessage = 'No tasks found', onTaskComplete }) => {
   const completedCount = tasks.filter((t) => t.isCompleted).length;
   const totalCount = tasks.length;
   const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -43,7 +43,7 @@ export const TaskList = ({ tasks = [], title, emptyMessage = 'No tasks found' })
       ) : (
         <div className="space-y-2.5">
           {tasks.map((task) => (
-            <TaskItem key={task._id} task={task} />
+            <TaskItem key={task._id} task={task} onComplete={onTaskComplete} />
           ))}
         </div>
       )}

@@ -35,6 +35,10 @@ export const TomorrowPage = () => {
     }
   };
 
+  const handleTaskComplete = (taskId) => {
+    setTasks((prev) => prev.filter((t) => t._id !== taskId));
+  };
+
   // Calculate filter counts
   const categories = ['Learning', 'Project', 'Personal', 'DSA'];
   const filterCounts = {
@@ -121,7 +125,9 @@ export const TomorrowPage = () => {
               </button>
             </div>
           ) : (
-            filteredTasks.map((task) => <TaskItem key={task._id} task={task} />)
+            filteredTasks.map((task) => (
+              <TaskItem key={task._id} task={task} onComplete={handleTaskComplete} />
+            ))
           )}
         </div>
 

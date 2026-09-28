@@ -6,6 +6,7 @@ import {
   getInboxTasks,
   getCompletedTasks,
   createTask,
+  deduplicateTasks,
   toggleTaskCompletion,
   updateTask,
   moveTask,
@@ -25,6 +26,7 @@ router.get('/tomorrow', getTomorrowTasks);
 router.get('/inbox', getInboxTasks);
 router.get('/completed', getCompletedTasks);
 router.post('/', createTask);
+router.post('/deduplicate', deduplicateTasks);
 router.post('/batch-reschedule', batchRescheduleTasks);
 router.post('/batch-cleanup', batchCleanupTasks);
 router.put('/:id', updateTask);
